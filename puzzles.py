@@ -16,13 +16,13 @@ def readPuzzle():
 	for clue in numbering.across:
 		across.append([clue["num"], clue["clue"]])
 		cell = clue["cell"]
-		cells[clue["num"]] = [cell % p.width, cell // p.height]
+		cells[clue["num"]] = [cell // p.height, cell % p.width]
 
 	down = []
 	for clue in numbering.down:
 		down.append([clue["num"], clue["clue"]])
 		cell = clue["cell"]
-		cells[clue["num"]] = [cell % p.width, cell // p.height]
+		cells[clue["num"]] = [cell // p.height, cell % p.width]
 
 	cells_array = [cells[key]+[key] for key in cells.keys()]
 	return json.dumps({"across": across, "down": down, "nums": cells_array})
