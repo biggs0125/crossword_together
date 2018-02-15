@@ -68,12 +68,14 @@ const setup = () => {
   $(document).keydown(handleKeypress(dims, filled));
   const socket = new WebSocket('ws://localhost:5678');
   socket.onmessage = (event) => {
-	const data = JSON.parse(event.data);
-	const acrossClues = data['across'];
-	const downClues = data['down'];
-	const cellNumbers = data['nums'];
-	addNumbers(cellNumbers);
-	addClues(acrossClues, downClues);
+  const data = JSON.parse(event.data);
+  const acrossClues = data['across'];
+  const downClues = data['down'];
+  const cellNumbers = data['nums'];
+  addNumbers(cellNumbers);
+  addClues(acrossClues, downClues);
+  filled = data['filled'];
+  fillCells(data['filled']);
   };
 }
 
