@@ -9,21 +9,21 @@ import websockets
 import json
 
 def readPuzzle():
-	p = puz.read("washpost.puz")
-	numbering = p.clue_numbering()
-	cells = dict()
+    p = puz.read("washpost.puz")
+    numbering = p.clue_numbering()
+    cells = dict()
 
-	across = []
-	for clue in numbering.across:
-		across.append([clue["num"], clue["clue"]])
-		cell = clue["cell"]
-		cells[clue["num"]] = [cell // p.height, cell % p.width]
+    across = []
+    for clue in numbering.across:
+        across.append([clue["num"], clue["clue"]])
+        cell = clue["cell"]
+        cells[clue["num"]] = [cell // p.height, cell % p.width]
 
-	down = []
-	for clue in numbering.down:
-		down.append([clue["num"], clue["clue"]])
-		cell = clue["cell"]
-		cells[clue["num"]] = [cell // p.height, cell % p.width]
+    down = []
+    for clue in numbering.down:
+        down.append([clue["num"], clue["clue"]])
+        cell = clue["cell"]
+        cells[clue["num"]] = [cell // p.height, cell % p.width]
 
     filled = []
     for i in range (p.width * p.height):
@@ -31,9 +31,9 @@ def readPuzzle():
         if (c == "."):
             filled.append([i // p.height, i % p.width])
 
-	cells_array = [cells[key]+[key] for key in cells.keys()]
+    cells_array = [cells[key]+[key] for key in cells.keys()]
 
-	return json.dumps({"across": across,
+    return json.dumps({"across": across,
                        "down": down,
                        "nums": cells_array,
                        "filled": filled})
