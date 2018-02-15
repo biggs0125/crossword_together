@@ -1,0 +1,62 @@
+body {
+  font-family: arial;
+}
+
+#board {
+  display: table;
+}
+
+#board-holder {
+  padding-right: 20px;
+}
+
+.board-row {
+  width: 100%;
+  display: table-row;
+}
+
+.board-cell {
+  border-color: black;
+  border-width: 1px;
+  border-style: solid;
+  width: 36px;
+  height: 36px;
+  text-align: center;
+}
+
+.filled-cell {
+  background-color: black;
+}
+
+.board-cell.selected-cell {
+  border-color: blue;
+  border-width: 2px;
+  padding: 0px;  
+}
+
+.num-holder {
+  width: 10%;
+  height: 10%;
+  display: block;
+  position: relative;
+  bottom: 15px;
+  font-size: 12px;
+}
+
+.has-letter .num-holder {
+  bottom: 5px;
+}
+
+.clues-holder {
+  width: 300px;
+  vertical-align: top;
+  text-align: center;
+}
+
+.clues {
+  text-align: left;
+}
+
+.clue.selected {
+  color: blue;
+}
