@@ -212,7 +212,10 @@ const selectCell = (cellElement) => {
 }
 
 const selectClue = (clueElement) => {
-  updateSelectedClue(getClueDirForClue(clueElement), getClueNumForClue(clueElement));
+  const c = [getClueDirForClue(clueElement), getClueNumForClue(clueElement)]
+  const clue = getClue(c);
+  updateSelectedClue(c);
+  updateSelectedCell(clue.cells[0]);
 }
 const putCharInSelected = (c) => {
   const cell = getCell(selectedCell); 
@@ -347,12 +350,20 @@ const handleKeypress = (dims) => (event) => {
     moveSelected(deltaX, deltaY);
   } else if (event.which === 8 || event.which === 46) {
     putCharInSelected(32);
+    let deltaX = 0;
+    let deltaY = 0;
+    if (selectedClue[0] === 'down') {
+      deltaX = -1;
+    } else {
+      deltaY = -1;
+    }
+    moveSelected(deltaX, deltaY);
   } else if (event.which === 13) {
     rotateSelected();
   }
 }
 
-const handleClueClick = (clue, dir, num) => () => {
+const handleClueClick = (clue) => () => {
   selectClue(clue);
 }
 
