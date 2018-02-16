@@ -21,6 +21,8 @@ const makeSquare = (x,y) => {
     clues: {'down': 0, 'across': 0},
     elem: square,
     highlighted: false,
+    selected: false,
+    selectedByOther: [], 
     letterElem: letterHolder, 
     numberElem: numHolder
   };
@@ -73,8 +75,8 @@ const addClues = (across, down) => {
 
 const addNumbers = (numbers) => {
   numbers.forEach((number) => {
-    const cell = getCell([number[0],number[1]]);
-    cell.number = number[2];
+    const cell = getCell(number[0]);
+    cell.number = number[1];
   });
 }
 
@@ -104,30 +106,36 @@ const associateCells = () => {
   }
 }
 
-const renderAllCells = () => {
-  for (let i = 0; i < dims[0]; i++) {
-    for (let j = 0; j < dims[1]; j++) {
-      renderCell([i,j]);
-    }
-  }
+const doUpdates = (updates) => {
+  updates.forEach(handleUpdate);
 }
 
 const setup = () => {
   dims = [15,15];
-  const socket = new WebSocket('ws://localhost:5678');
+  socket = new WebSocket('ws://localhost:5678');
   socket.onmessage = (event) => {
     const data = JSON.parse(event.data);
+    globalUuid = data.uuid;
+    const puzzleSpec = data.puzzleSpec;
+    const updates = data.updates;
     makeBoard(dims);
     $(document).keydown(handleKeypress(dims));
-    const acrossClues = data['across'];
-    const downClues = data['down'];
-    const cellNumbers = data['nums'];
+    const acrossClues = puzzleSpec['across'];
+    const downClues = puzzleSpec['down'];
+    const cellNumbers = puzzleSpec['nums'];
     addClues(acrossClues, downClues);
-    addNumbers(data['nums']);
-    fillCells(data['filled']);
+    addNumbers(puzzleSpec['nums']);
+    fillCells(puzzleSpec['filled']);
     associateCells();
+    doUpdates(updates);
     renderAllCells();
+    socket.onmessage = (event) => {
+      doUpdates(JSON.parse(event.data));
+    }
   };
+  socket.onopen = () => {
+    socket.send(JSON.stringify({'boardName': 'washpost'}));
+  }
 }
 
 // END SETUP FUNCTIONS
@@ -183,6 +191,7 @@ const updateSelectedCell = (newSelected) => {
   selectedCell = newSelected;
   renderCell(selectedCell);
   updateSelectedClue([selectedClue[0], newCell.clues[selectedClue[0]]]);
+  socket.send(JSON.stringify({'uuid': globalUuid, 'type': 'cursorMoved', 'data': [newSelected]}));
 }
 
 const updateSelectedClue = (newSelected) => {
@@ -217,10 +226,11 @@ const selectClue = (clueElement) => {
   updateSelectedClue(c);
   updateSelectedCell(clue.cells[0]);
 }
-const putCharInSelected = (c) => {
-  const cell = getCell(selectedCell); 
+
+const putCharInCell = (c, loc, opt_alreadyString) => {
+  const cell = getCell(loc); 
   const oldLetter = cell.letter;
-  const newLetter = String.fromCharCode(c);
+  const newLetter = opt_alreadyString ? c : String.fromCharCode(c);
   cell.letter = newLetter;
   let delta = 0;
   if (oldLetter === ' ' && newLetter !== ' ') {
@@ -233,9 +243,17 @@ const putCharInSelected = (c) => {
   downClue.solved += delta;
   const acrossClue = getClue(['across', cell.clues['across']]);
   acrossClue.solved += delta;
-  renderCell(selectedCell);
+  renderCell(loc);
   renderClue(['down', cell.clues['down']]);
   renderClue(['across', cell.clues['across']]);
+  return newLetter;
+}
+
+const putCharInSelected = (c, opt_alreadyString) => {
+  const newLetter = putCharInCell(c, selectedCell, opt_alreadyString);
+  socket.send(JSON.stringify({'uuid': globalUuid, 
+                              'type': 'letterPlaced', 
+                              'data': [selectedCell, newLetter]}));
 }
 
 // END UPDATERS
@@ -270,6 +288,11 @@ const renderCell = (loc) => {
   } else {
     info.elem.removeClass('selected-cell');
   }
+  if (info.selectedByOther.length > 0) {
+    info.elem.addClass('selected-cell-other');
+  } else {
+    info.elem.removeClass('selected-cell-other');
+  }
 }
 
 const renderClue = (c) => {
@@ -284,6 +307,14 @@ const renderClue = (c) => {
     clue.elem.addClass('clue-solved');
   } else {
     clue.elem.removeClass('clue-solved');
+  }
+}
+
+const renderAllCells = () => {
+  for (let i = 0; i < dims[0]; i++) {
+    for (let j = 0; j < dims[1]; j++) {
+      renderCell([i,j]);
+    }
   }
 }
 
@@ -367,6 +398,34 @@ const handleClueClick = (clue) => () => {
   selectClue(clue);
 }
 
+const handleUpdate = (update) => {
+  const updateType = update.type;
+  const data = update.data;
+  switch (updateType) {
+  case 'cursorMoved':
+    const cell = getCell(data[0]);
+    const locA = data[0];
+    const otherUuid = data[1];
+    const oldSelected = otherSelected[otherUuid];
+    if (oldSelected) {
+      const oldCell = getCell(oldSelected);
+      oldCell.selectedByOther = oldCell.selectedByOther.filter((u) => u !== otherUuid);
+      renderCell(oldSelected);
+    }
+    cell.selectedByOther.push(otherUuid);
+    otherSelected[otherUuid] = locA;
+    renderCell(locA);
+    break;
+  case 'letterPlaced':
+    const c = data[1];
+    const locB = data[0];
+    putCharInCell(c, locB, true);
+    break;
+  default:
+    return;
+  }
+}
+
 // END HANDLERS
 
 // BEGIN HELPERS
@@ -386,7 +445,8 @@ const validateCell = (loc) => {
 
 let selectedCell = [-1,-1];
 let selectedClue = ['across',-1];
+let socket, globalUuid;
 const cellInfo = {};
+const otherSelected = {};
 const clueInfo = {'across': {}, 'down': {}};
-
 $(document).ready(setup);
