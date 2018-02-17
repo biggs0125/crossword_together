@@ -112,7 +112,7 @@ const doUpdates = (updates) => {
 
 const setup = () => {
   dims = [15,15];
-  socket = new WebSocket('ws://localhost:5678');
+  socket = new WebSocket('ws://74.66.131.19:5678');
   socket.onmessage = (event) => {
     const data = JSON.parse(event.data);
     globalUuid = data.uuid;

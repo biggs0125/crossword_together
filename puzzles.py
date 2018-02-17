@@ -57,6 +57,7 @@ def add_player(board_name, uuid, websocket):
 
 @asyncio.coroutine
 def run_game(websocket, path):
+    print("connection received")
     init_info = yield from websocket.recv()
     init_info = json.loads(init_info)
     if not 'boardName' in init_info:
@@ -139,7 +140,7 @@ def send_board(websocket, path, board_name, uuid):
     yield from websocket.send(json.dumps(message))
 
 def run():
-    start_server = websockets.serve(run_game, 'localhost', 5678)
+    start_server = websockets.serve(run_game, '0.0.0.0', 5678)
     asyncio.get_event_loop().run_until_complete(start_server)
     asyncio.get_event_loop().run_forever()
   
