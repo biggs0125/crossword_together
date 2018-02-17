@@ -47,7 +47,8 @@ def readPuzzle(boardName):
     return {"across": across,
             "down": down,
             "nums": cells_array,
-            "filled": filled}
+            "filled": filled,
+            "dims": [p.height, p.width]}
 
 def create_board(board_name):
     GAMES[board_name] = {'players': {}, 'cells': {}, 'puzzleSpec': readPuzzle(board_name)}
