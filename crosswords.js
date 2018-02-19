@@ -399,12 +399,13 @@ const handleClueClick = (clue) => () => {
 }
 
 const handleUpdate = (update) => {
+  let loc, cell;
   const updateType = update.type;
   const data = update.data;
   switch (updateType) {
   case 'cursorMoved':
-    const cell = getCell(data[0]);
-    const locA = data[0];
+    cell = getCell(data[0]);
+    loc = data[0];
     const otherUuid = data[1];
     const oldSelected = otherSelected[otherUuid];
     if (oldSelected) {
@@ -413,13 +414,21 @@ const handleUpdate = (update) => {
       renderCell(oldSelected);
     }
     cell.selectedByOther.push(otherUuid);
-    otherSelected[otherUuid] = locA;
-    renderCell(locA);
+    otherSelected[otherUuid] = loc;
+    renderCell(loc);
     break;
   case 'letterPlaced':
     const c = data[1];
-    const locB = data[0];
-    putCharInCell(c, locB, true);
+    loc = data[0];
+    putCharInCell(c, loc, true);
+    break;
+  case 'playerRemoved':
+    const uuid = data[0];
+    loc = otherSelected[uuid];
+    cell = getCell(loc);
+    cell.selectedByOther = cell.selectedByOther.filter((u) => u !== uuid);
+    delete otherSelected[uuid];
+    renderCell(loc);
     break;
   default:
     return;
