@@ -33,7 +33,7 @@ const makeBoard = (dims) => {
   const board = $("<table>");
   board.attr("id", "board");
   $("#board-holder").append(board)
-  for (let i=0; i < dims[0]; i++) {
+  for (let i = 0; i < dims[0]; i++) {
     const row = $("<tr>");
     row.addClass("board-row");
     for (let j=0; j < dims[1]; j++) {
@@ -111,13 +111,13 @@ const doUpdates = (updates) => {
 }
 
 const setup = () => {
-  dims = [15,15];
   socket = new WebSocket('ws://74.66.131.19:5678');
   socket.onmessage = (event) => {
     const data = JSON.parse(event.data);
     globalUuid = data.uuid;
     const puzzleSpec = data.puzzleSpec;
     const updates = data.updates;
+    dims = puzzleSpec.dims;
     makeBoard(dims);
     $(document).keydown(handleKeypress(dims));
     const acrossClues = puzzleSpec['across'];
