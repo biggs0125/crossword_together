@@ -22,7 +22,7 @@ const makeSquare = (x,y) => {
     elem: square,
     highlighted: false,
     selected: false,
-    selectedByOther: [], 
+    otherSelected: [], 
     letterElem: letterHolder, 
     numberElem: numHolder
   };
@@ -288,8 +288,9 @@ const renderCell = (loc) => {
   } else {
     info.elem.removeClass('selected-cell');
   }
-  if (info.selectedByOther.length > 0) {
+  if (info.otherSelected.length > 0) {
     info.elem.addClass('selected-cell-other');
+    info.elem.css('border-color', info.otherSelected[0].color);
   } else {
     info.elem.removeClass('selected-cell-other');
   }
@@ -399,40 +400,16 @@ const handleClueClick = (clue) => () => {
 }
 
 const handleUpdate = (update) => {
-  let loc, cell;
-  const updateType = update.type;
-  const data = update.data;
-  switch (updateType) {
-  case 'cursorMoved':
-    cell = getCell(data[0]);
-    loc = data[0];
-    const otherUuid = data[1];
-    const oldSelected = otherSelected[otherUuid];
-    if (oldSelected) {
-      const oldCell = getCell(oldSelected);
-      oldCell.selectedByOther = oldCell.selectedByOther.filter((u) => u !== otherUuid);
-      renderCell(oldSelected);
-    }
-    cell.selectedByOther.push(otherUuid);
-    otherSelected[otherUuid] = loc;
-    renderCell(loc);
-    break;
-  case 'letterPlaced':
-    const c = data[1];
-    loc = data[0];
-    putCharInCell(c, loc, true);
-    break;
-  case 'playerRemoved':
-    const uuid = data[0];
-    loc = otherSelected[uuid];
-    cell = getCell(loc);
-    cell.selectedByOther = cell.selectedByOther.filter((u) => u !== uuid);
-    delete otherSelected[uuid];
-    renderCell(loc);
-    break;
-  default:
-    return;
+  const loc = update.loc;
+  const state = update.state;
+  const cell = getCell(loc);
+  if (state.otherSelected) {
+    cell.otherSelected = state.otherSelected;
   }
+  if (state.letter) { 
+    putCharInCell(state.letter, loc, true);
+  }
+  renderCell(loc);
 }
 
 // END HANDLERS
@@ -450,12 +427,20 @@ const validateCell = (loc) => {
   return 0;
 }
 
+const getRandomColor = () => {
+  const colorInd = Math.floor(Math.random() * otherColors.length);
+  return otherColors.splice(colorInd, colorInd + 1)[0];
+}
+
+const returnColor = (color) => {
+  otherColors.push(color);
+}
+
 // END HELPERS
 
 let selectedCell = [-1,-1];
 let selectedClue = ['across',-1];
 let socket, globalUuid;
 const cellInfo = {};
-const otherSelected = {};
 const clueInfo = {'across': {}, 'down': {}};
 $(document).ready(setup);
