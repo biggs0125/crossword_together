@@ -112,9 +112,28 @@ const doUpdates = (updates) => {
 }
 
 const setup = () => {
+  $('#submit-game-name').click(() => {
+    const gameName = $('#game-name').val();
+    const sendBoardName = () => {
+      socket.send(JSON.stringify({'boardName': gameName}));
+    }
+    if (socket.readyState === 1) {
+      sendBoardName();
+    } else {
+      socket.onopen = sendBoardName;
+    }
+  });
+  $('#setup').show();
+  $('#game').hide();
   socket = new WebSocket('ws://74.66.131.19:5678');
   socket.onmessage = (event) => {
     const data = JSON.parse(event.data);
+    if (data.error) {
+      $('#game-name-error').text(data.error);
+      return;
+    }
+    $('#setup').hide();
+    $('#game').show();
     globalUuid = data.uuid;
     const puzzleSpec = data.puzzleSpec;
     const updates = data.updates;
@@ -134,9 +153,6 @@ const setup = () => {
       doUpdates(JSON.parse(event.data));
     }
   };
-  socket.onopen = () => {
-    socket.send(JSON.stringify({'boardName': 'washpost'}));
-  }
 }
 
 // END SETUP FUNCTIONS

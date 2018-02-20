@@ -8,10 +8,17 @@ import asyncio
 import websockets
 import json
 import random
+import os
 
 GAMES = {}
 IDS = []
 COLORS = ['purple', 'red', 'green', 'orange']
+
+def get_board_name_list():
+    puzfiles = os.listdir('./puzzles/')
+    for puzfile in puzfiles:
+        puz = puzfile.replace(".puz", "")
+        GAMES[puz] = None
 
 def get_random_id():
     new_id = random.randint(0, 10000000)
@@ -21,7 +28,7 @@ def get_random_id():
         return new_id
 
 def read_puzzle(boardName):
-    p = puz.read(boardName+".puz")
+    p = puz.read("puzzles/" + boardName + ".puz")
     numbering = p.clue_numbering()
     cells = dict()
 
@@ -78,12 +85,18 @@ def add_player(game, uuid, websocket):
 
 @asyncio.coroutine
 def run_game(websocket, path):
-    init_info = yield from websocket.recv()
-    init_info = json.loads(init_info)
-    if not 'boardName' in init_info:
-        return
-    board_name = init_info['boardName']
-    if not board_name in GAMES:
+    board_name = None
+    while True:
+        init_info = yield from websocket.recv()
+        init_info = json.loads(init_info)
+        if not 'boardName' in init_info:
+            yield from send_error(websocket, path, "Please provide a board name.")
+        board_name = init_info['boardName']
+        if not board_name in GAMES:
+            yield from send_error(websocket, path, "Board does not exist.")
+        else:
+            break
+    if GAMES[board_name] is None:
         create_board(board_name)
     game = GAMES[board_name]
     if 'uuid' in init_info and init_info['uuid'] in game['players']:
@@ -171,8 +184,14 @@ def send_board(websocket, path, game, uuid):
                'updates': get_updates_from_cells(game, uuid), 
                'uuid': uuid}
     yield from websocket.send(json.dumps(message))
+
+@asyncio.coroutine
+def send_error(websocket, path, error_msg):
+    print("sending error: " + error_msg)
+    yield from websocket.send(json.dumps({"error": error_msg}))
     
 def run():
+    get_board_name_list()
     start_server = websockets.serve(run_game, '0.0.0.0', 5678)
     asyncio.get_event_loop().run_until_complete(start_server)
     asyncio.get_event_loop().run_forever()

@@ -5,7 +5,13 @@
 	<link rel="stylesheet" type="text/css" href="./crosswords.css">
   </head>
   <body>
-    <table>
+    <div id="setup">
+      <label>Enter game name:</label>
+      <input type="text" id="game-name">
+      <input type="submit" id="submit-game-name" value="Join Game">
+      <span id="game-name-error" class="error"></span>
+    </div>
+    <table id="game">
       <tr>
 	<td id="board-holder"></td>
 	<td class="clues-holder">
