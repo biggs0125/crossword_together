@@ -22,7 +22,7 @@ const makeSquare = (x,y) => {
     elem: square,
     highlighted: false,
     selected: false,
-    otherSelected: [], 
+    otherSelected: {'down': [], 'across': []}, 
     letterElem: letterHolder, 
     numberElem: numHolder
   };
@@ -55,6 +55,7 @@ const makeClue = (cluesElem, dir) => (c) => {
     cells: [],
     solved: 0,
     selected: false,
+    otherSelected: [],
     elem: clue
   };
   $(clue).click(handleClueClick(clue));
@@ -174,6 +175,8 @@ const rotateSelected = () => {
   const cell = getCell(selectedCell);
   const newDir = selectedClue[0] === 'down' ? 'across' : 'down';
   updateSelectedClue([newDir, cell.clues[newDir]]);
+  socket.send(JSON.stringify({'uuid': globalUuid, 'type': 'cursorMoved', 
+                              'data': [selectedCell, newDir]}));
 }
 
 const updateSelectedCell = (newSelected) => {
@@ -191,7 +194,8 @@ const updateSelectedCell = (newSelected) => {
   selectedCell = newSelected;
   renderCell(selectedCell);
   updateSelectedClue([selectedClue[0], newCell.clues[selectedClue[0]]]);
-  socket.send(JSON.stringify({'uuid': globalUuid, 'type': 'cursorMoved', 'data': [newSelected]}));
+  socket.send(JSON.stringify({'uuid': globalUuid, 'type': 'cursorMoved', 
+                              'data': [newSelected, selectedClue[0]]}));
 }
 
 const updateSelectedClue = (newSelected) => {
@@ -288,9 +292,12 @@ const renderCell = (loc) => {
   } else {
     info.elem.removeClass('selected-cell');
   }
-  if (info.otherSelected.length > 0) {
+  if (info.otherSelected.down.length > 0) {
     info.elem.addClass('selected-cell-other');
-    info.elem.css('border-color', info.otherSelected[0].color);
+    info.elem.css('border-color', info.otherSelected.down[0].color);
+  } else if (info.otherSelected.across.length > 0) {
+    info.elem.addClass('selected-cell-other');
+    info.elem.css('border-color', info.otherSelected.across[0].color);
   } else {
     info.elem.removeClass('selected-cell-other');
   }
@@ -308,6 +315,11 @@ const renderClue = (c) => {
     clue.elem.addClass('clue-solved');
   } else {
     clue.elem.removeClass('clue-solved');
+  }
+  if (clue.otherSelected.length > 0) {
+    clue.elem.css('color', clue.otherSelected[0].color);
+  } else {
+    clue.elem.css('color', '');
   }
 }
 
@@ -405,6 +417,20 @@ const handleUpdate = (update) => {
   const cell = getCell(loc);
   if (state.otherSelected) {
     cell.otherSelected = state.otherSelected;
+    const downSelected = state.otherSelected.down;
+    const acrossSelected = state.otherSelected.across;
+    if (downSelected.length > 0) {
+      const downClueInfo = ['down', cell.clues.down];
+      const downClue = getClue(downClueInfo);
+      downClue.otherSelected.push(downSelected[0]);
+      renderClue(downClueInfo);
+    }
+    if (acrossSelected.length > 0) {
+      const acrossClueInfo = ['across', cell.clues.across];
+      const acrossClue = getClue(acrossClueInfo);
+      acrossClue.otherSelected.push(acrossSelected[0]);
+      renderClue(acrossClueInfo);
+    }
   }
   if (state.letter) { 
     putCharInCell(state.letter, loc, true);

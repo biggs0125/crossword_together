@@ -61,8 +61,9 @@ def create_board(board_name):
 
 def remove_player(game, uuid):
     cursor = game['players'][uuid]['cursor']
+    orientation = game['players'][uuid]['orientation']
     if cursor is not None:
-        game['cells'][cursor]['selected'].remove(uuid)
+        game['cells'][cursor]['selected'][orientation].remove(uuid)
         send_updates_for_cells([cursor], game, uuid)
     game['colors'].append(game['players'][uuid]['color'])
     del game['players'][uuid]
@@ -71,7 +72,8 @@ def remove_player(game, uuid):
 def add_player(game, uuid, websocket):
     color = random.choice(game['colors'])
     game['colors'].remove(color)
-    game['players'][uuid] = {'websocket': websocket, 'cursor': None, 'color': color}
+    game['players'][uuid] = {'websocket': websocket, 'cursor': None, 'orientation': None, 
+                             'color': color}
     IDS.append(uuid)
 
 @asyncio.coroutine
@@ -111,14 +113,17 @@ def handle_update(websocket, path, update, game):
     cursor = loc_to_cursor(loc)
     cursors_to_update = []
     if not cursor in cells:
-        cells[cursor] = {'selected': []}
+        cells[cursor] = {'selected': {'down': [], 'across': []}}
     if update_type == 'cursorMoved':
         old_cursor = game['players'][uuid]['cursor']
+        old_orientation = game['players'][uuid]['orientation']
+        orientation = update['data'][1]
         if old_cursor is not None:
-            cells[old_cursor]['selected'].remove(uuid)
+            cells[old_cursor]['selected'][old_orientation].remove(uuid)
             cursors_to_update.append(old_cursor)
         game['players'][uuid]['cursor'] = cursor
-        cells[cursor]['selected'].append(uuid)
+        game['players'][uuid]['orientation'] = orientation
+        cells[cursor]['selected'][orientation].append(uuid)
         cursors_to_update.append(cursor)
     if update_type == 'letterPlaced':
         cells[cursor]['letter'] = update['data'][1]
@@ -135,10 +140,14 @@ def create_updates_for_cells(cursors, game, uuid):
     updates = []
     for cursor in cursors:
         cell = game['cells'][cursor]
-        otherSelected = filter(lambda x: x != uuid, cell['selected'])
-        others = map(lambda x: {'uuid': x, 'color': game['players'][x]['color']}, otherSelected)
+        otherSelectedDown = filter(lambda x: x != uuid, cell['selected']['down'])
+        othersDown = map(lambda x: {'uuid': x, 'color': game['players'][x]['color']}, 
+                         otherSelectedDown)
+        otherSelectedAcross = filter(lambda x: x != uuid, cell['selected']['across'])
+        othersAcross = map(lambda x: {'uuid': x, 'color': game['players'][x]['color']}, 
+                           otherSelectedAcross)
         state = {}
-        state['otherSelected'] = list(others)
+        state['otherSelected'] = {'down': list(othersDown), 'across': list(othersAcross)}
         if 'letter' in cell:
             state['letter'] = cell['letter']
         updates.append({
