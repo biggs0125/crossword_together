@@ -41,7 +41,7 @@ const makeBoard = (dims) => {
     }
     board.append(row);
   }
-}
+};
 
 const makeClue = (cluesElem, dir) => (c) => {
   const clue = $("<div>");
@@ -59,27 +59,27 @@ const makeClue = (cluesElem, dir) => (c) => {
     elem: clue
   };
   $(clue).click(handleClueClick(clue));
-}
+};
 
 const fillCells = (locs) => {
   locs.forEach((loc) => {
     getCell(loc).filled = true;
   });
-}
+};
 
 const addClues = (across, down) => {
   const acrossClues = $("#across-clues");
   const downClues = $("#down-clues");
   across.forEach(makeClue(acrossClues, 'across'));
   down.forEach(makeClue(downClues, 'down'));
-}
+};
 
 const addNumbers = (numbers) => {
   numbers.forEach((number) => {
     const cell = getCell(number[0]);
     cell.number = number[1];
   });
-}
+};
 
 const associateCells = () => {
   let curAcross;
@@ -105,14 +105,14 @@ const associateCells = () => {
     }
     curAcross = null;
   }
-}
+};
 
 const setup = () => {
   $('#submit-board-name').click(() => {
     const boardName = $('#board-name').val();
     const sendBoardName = () => {
       socket.send(JSON.stringify({'boardName': boardName}));
-    }
+    };
     if (socket.readyState === 1) {
       sendBoardName();
     } else {
@@ -123,7 +123,7 @@ const setup = () => {
     const gameId = $('#game-id').val();
     const sendGameId = () => {
       socket.send(JSON.stringify({'gameId': gameId}));
-    }
+    };
     if (socket.readyState === 1) {
       sendGameId();
     } else {
@@ -161,9 +161,9 @@ const setup = () => {
     renderAllCells();
     socket.onmessage = (event) => {
       handleUpdates(JSON.parse(event.data));
-    }
+    };
   };
-}
+};
 
 // END SETUP FUNCTIONS
 
@@ -174,25 +174,25 @@ const getCell = (loc) => {
     return null;
   }
   return cellInfo[loc[0]][loc[1]];
-}
+};
 
 const getClue = (clueId) => {
   return clueInfo[clueId[0]][clueId[1]];
-}
+};
 
 const getLocForCell = (cellElement) => {
   const loc = cellElement.attr("loc");
   const xy = loc.split(",");
   return xy.map((x) => parseInt(x));
-}
+};
 
 const getClueDirForClue = (clueElement) => {
   return clueElement.attr("dir");
-}
+};
 
 const getClueNumForClue = (clueElement) => {
   return clueElement.attr("num");
-}
+};
 
 // END GETTERS
 
@@ -203,7 +203,7 @@ const rotateSelected = () => {
   updateSelectedClue([newDir, cell.clues[newDir]]);
   socket.send(JSON.stringify({'uuid': globalUuid, 'type': 'cursorMoved', 
                               'data': [selectedCell, newDir]}));
-}
+};
 
 const updateSelectedCell = (newSelected) => {
   if (newSelected[0] === selectedCell[0] && newSelected[1] === selectedCell[1]) {
@@ -222,7 +222,7 @@ const updateSelectedCell = (newSelected) => {
   updateSelectedClue([selectedClue[0], newCell.clues[selectedClue[0]]]);
   socket.send(JSON.stringify({'uuid': globalUuid, 'type': 'cursorMoved', 
                               'data': [newSelected, selectedClue[0]]}));
-}
+};
 
 const updateSelectedClue = (newSelected) => {
   const oldClue = getClue(selectedClue);
@@ -244,18 +244,18 @@ const updateSelectedClue = (newSelected) => {
     cell.highlighted = true;
     renderCell(loc);
   });
-}
+};
 
 const selectCell = (cellElement) => {
   updateSelectedCell(getLocForCell(cellElement));
-}
+};
 
 const selectClue = (clueElement) => {
   const c = [getClueDirForClue(clueElement), getClueNumForClue(clueElement)]
   const clue = getClue(c);
   updateSelectedClue(c);
   updateSelectedCell(clue.cells[0]);
-}
+};
 
 const putCharInCell = (c, loc, opt_alreadyString) => {
   const cell = getCell(loc); 
@@ -277,14 +277,14 @@ const putCharInCell = (c, loc, opt_alreadyString) => {
   renderClue(['down', cell.clues['down']]);
   renderClue(['across', cell.clues['across']]);
   return newLetter;
-}
+};
 
 const putCharInSelected = (c, opt_alreadyString) => {
   const newLetter = putCharInCell(c, selectedCell, opt_alreadyString);
   socket.send(JSON.stringify({'uuid': globalUuid, 
                               'type': 'letterPlaced', 
                               'data': [selectedCell, newLetter]}));
-}
+};
 
 // END UPDATERS
 
@@ -327,7 +327,7 @@ const renderCell = (loc) => {
   } else {
     info.elem.removeClass('selected-cell-other');
   }
-}
+};
 
 const renderClue = (c) => {
   const clue = clueInfo[c[0]][c[1]];
@@ -347,7 +347,7 @@ const renderClue = (c) => {
   } else {
     clue.elem.css('color', '');
   }
-}
+};
 
 const renderAllCells = () => {
   for (let i = 0; i < dims[0]; i++) {
@@ -359,7 +359,7 @@ const renderAllCells = () => {
 
 const renderGameId = (gameId) => {
   $('#game-id-holder').text(gameId);
-}
+};
 
 // END RENDERERS
 
@@ -367,7 +367,7 @@ const renderGameId = (gameId) => {
 
 const handleCellClick = (event) => {
   selectCell($(event.currentTarget));
-}
+};
 
 const handleKeypress = (dims) => (event) => {
   const moveSelected = (deltaX, deltaY) => { 
@@ -392,7 +392,7 @@ const handleKeypress = (dims) => (event) => {
       newY += deltaY;
     }
     updateSelectedCell([newX, newY]);
-  }
+  };
   
   if (event.which > 36 && event.which < 41) {
     let deltaX = 0;
@@ -435,11 +435,11 @@ const handleKeypress = (dims) => (event) => {
   } else if (event.which === 13) {
     rotateSelected();
   }
-}
+};
 
 const handleClueClick = (clue) => () => {
   selectClue(clue);
-}
+};
 
 const handleUpdate = (update) => {
   const loc = update.loc;
@@ -466,11 +466,11 @@ const handleUpdate = (update) => {
     putCharInCell(state.letter, loc, true);
   }
   renderCell(loc);
-}
+};
 
 const handleUpdates = (updates) => {
   updates.forEach(handleUpdate);
-}
+};
 
 // END HANDLERS
 
@@ -483,9 +483,9 @@ const validateCell = (loc) => {
   }
   if (cell.filled) {
     return 1;
-  };
+  }
   return 0;
-}
+};
 
 // END HELPERS
 
