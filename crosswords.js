@@ -487,15 +487,6 @@ const validateCell = (loc) => {
   return 0;
 }
 
-const getRandomColor = () => {
-  const colorInd = Math.floor(Math.random() * otherColors.length);
-  return otherColors.splice(colorInd, colorInd + 1)[0];
-}
-
-const returnColor = (color) => {
-  otherColors.push(color);
-}
-
 // END HELPERS
 
 let selectedCell = [-1,-1];
