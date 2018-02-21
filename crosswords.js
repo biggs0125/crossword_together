@@ -107,15 +107,11 @@ const associateCells = () => {
   }
 }
 
-const doUpdates = (updates) => {
-  updates.forEach(handleUpdate);
-}
-
 const setup = () => {
-  $('#submit-game-name').click(() => {
-    const gameName = $('#game-name').val();
+  $('#submit-board-name').click(() => {
+    const boardName = $('#board-name').val();
     const sendBoardName = () => {
-      socket.send(JSON.stringify({'boardName': gameName}));
+      socket.send(JSON.stringify({'boardName': boardName}));
     }
     if (socket.readyState === 1) {
       sendBoardName();
@@ -123,21 +119,35 @@ const setup = () => {
       socket.onopen = sendBoardName;
     }
   });
-  $('#setup').show();
-  $('#game').hide();
+  $('#submit-game-id').click(() => {
+    const gameId = $('#game-id').val();
+    const sendGameId = () => {
+      socket.send(JSON.stringify({'gameId': gameId}));
+    }
+    if (socket.readyState === 1) {
+      sendGameId();
+    } else {
+      socket.onopen = sendGameId;
+    }
+  });
+  $('#setup-holder').show();
+  $('#game-holder').hide();
   socket = new WebSocket('ws://74.66.131.19:5678');
   socket.onmessage = (event) => {
     const data = JSON.parse(event.data);
     if (data.error) {
-      $('#game-name-error').text(data.error);
+      $(`#${data.error.field}-error`).text(data.error.message);
       return;
     }
-    $('#setup').hide();
-    $('#game').show();
+    $('#setup-holder').hide();
+    $('#game-holder').show();
     globalUuid = data.uuid;
     const puzzleSpec = data.puzzleSpec;
     const updates = data.updates;
+    const gameId = data.gameId;
+    console.log(data);
     dims = puzzleSpec.dims;
+    renderGameId(gameId);
     makeBoard(dims);
     $(document).keydown(handleKeypress(dims));
     const acrossClues = puzzleSpec['across'];
@@ -147,10 +157,10 @@ const setup = () => {
     addNumbers(puzzleSpec['nums']);
     fillCells(puzzleSpec['filled']);
     associateCells();
-    doUpdates(updates);
+    handleUpdates(updates);
     renderAllCells();
     socket.onmessage = (event) => {
-      doUpdates(JSON.parse(event.data));
+      handleUpdates(JSON.parse(event.data));
     }
   };
 }
@@ -347,6 +357,10 @@ const renderAllCells = () => {
   }
 }
 
+const renderGameId = (gameId) => {
+  $('#game-id-holder').text(gameId);
+}
+
 // END RENDERERS
 
 // BEGIN HANDLERS
@@ -452,6 +466,10 @@ const handleUpdate = (update) => {
     putCharInCell(state.letter, loc, true);
   }
   renderCell(loc);
+}
+
+const handleUpdates = (updates) => {
+  updates.forEach(handleUpdate);
 }
 
 // END HANDLERS

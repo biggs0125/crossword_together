@@ -14,12 +14,6 @@ GAMES = {}
 IDS = []
 COLORS = ['purple', 'red', 'green', 'orange']
 
-def get_board_name_list():
-    puzfiles = os.listdir('./puzzles/')
-    for puzfile in puzfiles:
-        puz = puzfile.replace(".puz", "")
-        GAMES[puz] = None
-
 def get_random_id():
     new_id = random.randint(0, 10000000)
     if new_id in IDS:
@@ -59,12 +53,19 @@ def read_puzzle(boardName):
             "dims": [p.height, p.width]}
 
 def create_board(board_name):
-    GAMES[board_name] = {
-        'players': {}, 
-        'cells': {}, 
-        'puzzleSpec': read_puzzle(board_name),
-        'colors': [color for color in COLORS]
-    }
+    try:
+        puzzleSpec = read_puzzle(board_name)
+        game_id = get_random_id()
+        GAMES[game_id] = {
+            'boardName': board_name,
+            'players': {}, 
+            'cells': {}, 
+            'puzzleSpec': puzzleSpec,
+            'colors': [color for color in COLORS]
+        }
+        return game_id
+    except FileNotFoundError:
+        return None
 
 def remove_player(game, uuid):
     cursor = game['players'][uuid]['cursor']
@@ -77,11 +78,14 @@ def remove_player(game, uuid):
     IDS.remove(uuid)
 
 def add_player(game, uuid, websocket):
+    if len(game['colors']) == 0:
+        return False
     color = random.choice(game['colors'])
     game['colors'].remove(color)
     game['players'][uuid] = {'websocket': websocket, 'cursor': None, 'orientation': None, 
                              'color': color}
     IDS.append(uuid)
+    return True
 
 @asyncio.coroutine
 def run_game(websocket, path):
@@ -89,22 +93,35 @@ def run_game(websocket, path):
     while True:
         init_info = yield from websocket.recv()
         init_info = json.loads(init_info)
-        if not 'boardName' in init_info:
-            yield from send_error(websocket, path, "Please provide a board name.")
-        board_name = init_info['boardName']
-        if not board_name in GAMES:
-            yield from send_error(websocket, path, "Board does not exist.")
+        if 'boardName' in init_info:
+            board_name = init_info['boardName']
+            game_id = create_board(board_name)
+            if game_id is None:
+                yield from send_error(websocket, path, "board-name", 
+                                      "The provided board name does not exist.")
+                continue
+        elif 'gameId' in init_info:
+            try:
+                game_id = int(init_info['gameId'])
+            except ValueError:
+                yield from send_error(websocket, path, "game-id",
+                                      "The provided game ID is not a valid format.")
+            if not game_id in GAMES:
+                yield from send_error(websocket, path, "game-id", 
+                                      "The provided game ID does not exist.")
+                continue
+            
+        game = GAMES[game_id]
+        if 'uuid' in init_info and init_info['uuid'] in game['players']:
+            uuid = init_info['uuid']
         else:
-            break
-    if GAMES[board_name] is None:
-        create_board(board_name)
-    game = GAMES[board_name]
-    if 'uuid' in init_info and init_info['uuid'] in game['players']:
-        uuid = init_info['uuid']
-    else:
-        uuid = get_random_id() 
-        add_player(game, uuid, websocket)
-    yield from send_board(websocket, path, game, uuid)
+            uuid = get_random_id()
+            if add_player(game, uuid, websocket):
+                break
+            else:
+                yield from send_error(websocket, path, "game-id", 
+                                      "The game you are trying to join is full.")
+    yield from send_board(websocket, path, game, uuid, game_id)
     try:
         while True:
             update_message = yield from websocket.recv()
@@ -179,19 +196,18 @@ def loc_to_cursor(loc):
     return ','.join(map(lambda x: str(x), loc))
 		
 @asyncio.coroutine
-def send_board(websocket, path, game, uuid):
+def send_board(websocket, path, game, uuid, game_id):
     message = {'puzzleSpec': game['puzzleSpec'], 
                'updates': get_updates_from_cells(game, uuid), 
-               'uuid': uuid}
+               'uuid': uuid,
+               'gameId': game_id}
     yield from websocket.send(json.dumps(message))
 
 @asyncio.coroutine
-def send_error(websocket, path, error_msg):
-    print("sending error: " + error_msg)
-    yield from websocket.send(json.dumps({"error": error_msg}))
+def send_error(websocket, path, error_field, error_msg):
+    yield from websocket.send(json.dumps({"error": {"message": error_msg, "field": error_field}}))
     
 def run():
-    get_board_name_list()
     start_server = websockets.serve(run_game, '0.0.0.0', 5678)
     asyncio.get_event_loop().run_until_complete(start_server)
     asyncio.get_event_loop().run_forever()

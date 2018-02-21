@@ -4,9 +4,7 @@
   "version": "0.1",
   "content_scripts": [
     {
-      "matches": [
-        "<all_urls>"
-    ],
+      "matches": ["*://*.nytimes.com/*"],
       "js": ["get_puzzles.js"]
     }
   ]
