@@ -145,7 +145,6 @@ const setup = () => {
     const puzzleSpec = data.puzzleSpec;
     const updates = data.updates;
     const gameId = data.gameId;
-    console.log(data);
     dims = puzzleSpec.dims;
     renderGameId(gameId);
     makeBoard(dims);
@@ -319,13 +318,14 @@ const renderCell = (loc) => {
     info.elem.removeClass('selected-cell');
   }
   if (info.otherSelected.down.length > 0) {
-    info.elem.addClass('selected-cell-other');
-    info.elem.css('border-color', info.otherSelected.down[0].color);
+    info.elem.addClass('selected-cell-other-' + info.otherSelected.down[0].color);
   } else if (info.otherSelected.across.length > 0) {
-    info.elem.addClass('selected-cell-other');
-    info.elem.css('border-color', info.otherSelected.across[0].color);
+    info.elem.addClass('selected-cell-other-' + info.otherSelected.across[0].color);
   } else {
-    info.elem.removeClass('selected-cell-other');
+    info.elem.removeClass('selected-cell-other-red');
+    info.elem.removeClass('selected-cell-other-purple');
+    info.elem.removeClass('selected-cell-other-green');
+    info.elem.removeClass('selected-cell-other-orange');
   }
 };
 
@@ -449,18 +449,14 @@ const handleUpdate = (update) => {
     cell.otherSelected = state.otherSelected;
     const downSelected = state.otherSelected.down;
     const acrossSelected = state.otherSelected.across;
-    if (downSelected.length > 0) {
-      const downClueInfo = ['down', cell.clues.down];
-      const downClue = getClue(downClueInfo);
-      downClue.otherSelected.push(downSelected[0]);
-      renderClue(downClueInfo);
-    }
-    if (acrossSelected.length > 0) {
-      const acrossClueInfo = ['across', cell.clues.across];
-      const acrossClue = getClue(acrossClueInfo);
-      acrossClue.otherSelected.push(acrossSelected[0]);
-      renderClue(acrossClueInfo);
-    }
+    const downClueInfo = ['down', cell.clues.down];
+    const downClue = getClue(downClueInfo);
+    downClue.otherSelected = downSelected;
+    renderClue(downClueInfo);
+    const acrossClueInfo = ['across', cell.clues.across];
+    const acrossClue = getClue(acrossClueInfo);
+    acrossClue.otherSelected = acrossSelected;
+    renderClue(acrossClueInfo);
   }
   if (state.letter) { 
     putCharInCell(state.letter, loc, true);

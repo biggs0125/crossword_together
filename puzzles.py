@@ -67,12 +67,13 @@ def create_board(board_name):
     except FileNotFoundError:
         return None
 
+@asyncio.coroutine
 def remove_player(game, uuid):
     cursor = game['players'][uuid]['cursor']
     orientation = game['players'][uuid]['orientation']
     if cursor is not None:
         game['cells'][cursor]['selected'][orientation].remove(uuid)
-        send_updates_for_cells([cursor], game, uuid)
+        yield from send_updates_for_cells([cursor], game, uuid)
     game['colors'].append(game['players'][uuid]['color'])
     del game['players'][uuid]
     IDS.remove(uuid)
@@ -128,7 +129,7 @@ def run_game(websocket, path):
             update = json.loads(update_message)
             yield from handle_update(websocket, path, update, game)
     except websockets.exceptions.ConnectionClosed:
-        remove_player(game, uuid)
+        yield from remove_player(game, uuid)
 
 @asyncio.coroutine
 def handle_update(websocket, path, update, game):
@@ -147,10 +148,10 @@ def handle_update(websocket, path, update, game):
     if update_type == 'cursorMoved':
         old_cursor = game['players'][uuid]['cursor']
         old_orientation = game['players'][uuid]['orientation']
-        orientation = update['data'][1]
         if old_cursor is not None:
             cells[old_cursor]['selected'][old_orientation].remove(uuid)
             cursors_to_update.append(old_cursor)
+        orientation = update['data'][1]
         game['players'][uuid]['cursor'] = cursor
         game['players'][uuid]['orientation'] = orientation
         cells[cursor]['selected'][orientation].append(uuid)
@@ -158,8 +159,9 @@ def handle_update(websocket, path, update, game):
     if update_type == 'letterPlaced':
         cells[cursor]['letter'] = update['data'][1]
         cursors_to_update.append(cursor)
-    send_updates_for_cells(cursors_to_update, game, uuid)
+    yield from send_updates_for_cells(cursors_to_update, game, uuid)
 
+@asyncio.coroutine
 def send_updates_for_cells(cursors, game, uuid):
     for u in game['players']:
         if u != uuid:

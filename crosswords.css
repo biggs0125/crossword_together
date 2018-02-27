@@ -34,9 +34,27 @@ body {
   padding: 0px;  
 }
 
-.board-cell.selected-cell-other {
+.board-cell.selected-cell-other-red {
+  border-width: 2px;
+  border-color: red;
+  padding: 0px;  
+}
+
+.board-cell.selected-cell-other-purple {
   border-width: 2px;
   border-color: purple;
+  padding: 0px;  
+}
+
+.board-cell.selected-cell-other-green {
+  border-width: 2px;
+  border-color: green;
+  padding: 0px;  
+}
+
+.board-cell.selected-cell-other-orange {
+  border-width: 2px;
+  border-color: orange;
   padding: 0px;  
 }
 
