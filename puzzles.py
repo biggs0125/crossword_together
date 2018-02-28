@@ -9,6 +9,7 @@ import websockets
 import json
 import random
 import os
+import threading
 
 GAMES = {}
 IDS = []
@@ -212,6 +213,9 @@ def send_error(websocket, path, error_field, error_msg):
 def run():
     start_server = websockets.serve(run_game, '0.0.0.0', 5678)
     asyncio.get_event_loop().run_until_complete(start_server)
-    asyncio.get_event_loop().run_forever()
-  
-run()
+    t = threading.Thread(target=asyncio.get_event_loop().run_forever)
+    t.start()
+
+if __name__ == "__main__":
+    run()
+    
