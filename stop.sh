@@ -1,2 +1,2 @@
 pkill python3
-pkill flask
+pkill gunicorn
