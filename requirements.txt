@@ -1,0 +1,4 @@
+flask==0.12.2
+asyncio==3.4.3 
+puzpy==0.2.3
+websockets==4.0.1
