@@ -3,4 +3,6 @@ app = Flask(__name__)
 
 @app.route('/')
 def crossword_page():
-    return render_template('crosswords.html', css_url=url_for('crosswords.css'), js_url=url_for('crosswords.js'))
+    return render_template('crosswords.html', 
+                           css_url=url_for('static', filename='crosswords.css'), 
+                           js_url=url_for('static', filename='crosswords.js'))
