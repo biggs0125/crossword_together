@@ -230,10 +230,11 @@ def create_updates_for_cells(cursors, game, uuid):
 def clean_cells(cursors, game):
     cells = game['cells']
     for cursor in cursors:
-        cell = cells[cursor]
-        if len(cell['selected']['down']) == 0 and len(cell['selected']['across']) == 0 \
-           and ((not 'letter' in cell) or cell['letter'] == ' '):
-            del cells[cursor]
+        if cursor in cells:
+            cell = cells[cursor]
+            if len(cell['selected']['down']) == 0 and len(cell['selected']['across']) == 0 \
+               and ((not 'letter' in cell) or cell['letter'] == ' '):
+                del cells[cursor]
     
 
 def get_updates_from_cells(game, uuid):
