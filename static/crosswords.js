@@ -11,6 +11,9 @@ const makeSquare = (x,y) => {
   const letterHolder = $("<span>");
   letterHolder.addClass("letter-holder");
   square.append(letterHolder);
+  const dummyInput = $("<input>");
+  dummyInput.addClass("dummy-input");
+  square.append(dummyInput);
   if (!cellInfo[x]) {
     cellInfo[x] = {};
   }
@@ -246,6 +249,7 @@ const updateSelectedClue = (newSelected) => {
 
 const selectCell = (cellElement) => {
   updateSelectedCell(getLocForCell(cellElement));
+  cellElement.find(".dummy-input").focus();
 };
 
 const selectClue = (clueElement) => {

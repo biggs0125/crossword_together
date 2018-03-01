@@ -100,3 +100,11 @@ body {
 .join-game-row {
   margin: 20px 0px;
 }
+
+.dummy-input {
+  width: 0;
+  height: 0;
+  border: 0;
+  margin: 0;
+  padding: 0;
+}
