@@ -33,7 +33,7 @@ const makeBoard = (dims) => {
   const board = $("<table>");
   board.attr("id", "board");
   $("#board-holder").append(board)
-  for (let i = 0; i < dims[0]; i++) {
+  for (let i=0; i < dims[0]; i++) {
     const row = $("<tr>");
     row.addClass("board-row");
     for (let j=0; j < dims[1]; j++) {

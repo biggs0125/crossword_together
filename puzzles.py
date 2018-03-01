@@ -31,19 +31,19 @@ def read_puzzle(boardName):
     for clue in numbering.across:
         across.append([clue["num"], clue["clue"]])
         cell = clue["cell"]
-        cells[clue["num"]] = [cell // p.height, cell % p.width]
+        cells[clue["num"]] = [cell // p.width, cell % p.width]
 
     down = []
     for clue in numbering.down:
         down.append([clue["num"], clue["clue"]])
         cell = clue["cell"]
-        cells[clue["num"]] = [cell // p.height, cell % p.width]
+        cells[clue["num"]] = [cell // p.width, cell % p.width]
 
     filled = []
     for i in range (p.width * p.height):
         c = p.fill[i]
         if (c == "."):
-            filled.append([i // p.height, i % p.width])
+            filled.append([i // p.width, i % p.width])
 
     cells_array = [[cells[key], key] for key in cells.keys()]
 
