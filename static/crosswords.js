@@ -132,7 +132,7 @@ const setup = () => {
   });
   $('#setup-holder').show();
   $('#game-holder').hide();
-  socket = new WebSocket('ws://174.138.51.66:5678');
+  socket = new WebSocket('ws://' + window.location.hostname + ':5678');
   socket.onmessage = (event) => {
     const data = JSON.parse(event.data);
     if (data.error) {
