@@ -13,8 +13,7 @@ const makeSquare = (x,y) => {
   square.append(letterHolder);
   const dummyInput = $("<input>");
   dummyInput.addClass("dummy-input");
-  dummyInput.change(handleInputChange(dims));
-  dummyInput.keydown(handleKeypress(dims));
+  dummyInput.on('input', handleInputChange(dims));
   square.append(dummyInput);
   if (!cellInfo[x]) {
     cellInfo[x] = {};
@@ -159,6 +158,7 @@ const setup = () => {
     addNumbers(puzzleSpec['nums']);
     fillCells(puzzleSpec['filled']);
     associateCells();
+    $(document).keydown(handleKeypress(dims));
     handleUpdates(updates);
     renderAllCells();
     socket.onmessage = (event) => {
@@ -207,8 +207,8 @@ const rotateSelected = () => {
                               'data': [selectedCell, newDir]}));
 };
 
-const updateSelectedCell = (newSelected) => {
-  if (newSelected[0] === selectedCell[0] && newSelected[1] === selectedCell[1]) {
+const updateSelectedCell = (newSelected, opt_norotate) => {
+  if (!opt_norotate && newSelected[0] === selectedCell[0] && newSelected[1] === selectedCell[1]) {
     rotateSelected();
     return; 
   }
@@ -222,6 +222,7 @@ const updateSelectedCell = (newSelected) => {
   selectedCell = newSelected;
   renderCell(selectedCell);
   updateSelectedClue([selectedClue[0], newCell.clues[selectedClue[0]]]);
+  newCell.elem.find(".dummy-input").focus();
   socket.send(JSON.stringify({'type': 'cursorMoved', 
                               'data': [newSelected, selectedClue[0]]}));
 };
@@ -250,7 +251,6 @@ const updateSelectedClue = (newSelected) => {
 
 const selectCell = (cellElement) => {
   updateSelectedCell(getLocForCell(cellElement));
-  cellElement.find(".dummy-input").focus();
 };
 
 const selectClue = (clueElement) => {
@@ -372,45 +372,30 @@ const handleCellClick = (event) => {
   selectCell($(event.currentTarget));
 };
 
-const handleInputChange = (dims) => {
-  const handler = handleKeypress(dims);
-  return (event) => {
-    const val = $(event.currentTarget).val();
-    if (val.length > 1) {
-      $(event.currentTarget).val('');
-    } else if (val.length === 1) {
-      event.which = val.charCodeAt(0); 
-    } else {
-      event.which = 36;
+const handleInputChange = (dims) => (event) => {
+  const target = $(event.currentTarget);
+  const val = target.val();
+  if (val.length > 1) {
+    target.val('');
+  } else if (val.length === 1) {
+    if (/^[a-zA-Z]+$/.test(val)) {
+      putCharInSelected(val.toUpperCase(), true);
+      let deltaX = 0;
+      let deltaY = 0;
+      if (selectedClue[0] === 'down') {
+        deltaX = 1;
+      } else {
+        deltaY = 1;
+      }
+      moveSelected(deltaX, deltaY, true);
     }
-    handler(event);
+    target.val('');
+  } else {
+    event.which = 36;
   }
 };
 
 const handleKeypress = (dims) => (event) => {
-  const moveSelected = (deltaX, deltaY) => {
-    const curX = selectedCell[0];
-    const curY = selectedCell[1];
-    let newX = curX + deltaX;
-    let newY = curY + deltaY;
-    let invalidCode;
-    while (invalidCode = validateCell([newX, newY])) {
-      if (invalidCode === 2) {
-	if (deltaX === 1) {
-          newX = -1;
-        } else if (deltaX === -1) {
-          newX = dims[0];
-        } else if (deltaY === 1) {
-          newY = -1;
-        } else if (deltaY === -1) {
-          newY = dims[1];
-        }
-      }
-      newX += deltaX;
-      newY += deltaY;
-    }
-    updateSelectedCell([newX, newY]);
-  };
   if (event.which > 36 && event.which < 41) {
     let deltaX = 0;
     let deltaY = 0;
@@ -429,18 +414,12 @@ const handleKeypress = (dims) => (event) => {
       break;		
     }
     moveSelected(deltaX, deltaY);
-  } else if (event.which > 64 && event.which < 91) {
-    putCharInSelected(event.which);
-    let deltaX = 0;
-    let deltaY = 0;
-    if (selectedClue[0] === 'down') {
-      deltaX = 1;
-    } else {
-      deltaY = 1;
-    }
-    moveSelected(deltaX, deltaY);
   } else if (event.which === 8 || event.which === 46) {
-    putCharInSelected(32);
+    const cell = getCell(selectedCell);
+    const updateBefore = cell.letter && cell.letter !== ' ';
+    if (updateBefore) {
+      putCharInSelected(32); 
+    }
     let deltaX = 0;
     let deltaY = 0;
     if (selectedClue[0] === 'down') {
@@ -448,7 +427,10 @@ const handleKeypress = (dims) => (event) => {
     } else {
       deltaY = -1;
     }
-    moveSelected(deltaX, deltaY);
+    moveSelected(deltaX, deltaY, true);
+    if (!updateBefore) {
+      putCharInSelected(32); 
+    }
   } else if (event.which === 13) {
     rotateSelected();
   }
@@ -498,6 +480,35 @@ const validateCell = (loc) => {
     return 1;
   }
   return 0;
+};
+
+const moveSelected = (deltaX, deltaY, opt_nowraparound) => {
+  const curX = selectedCell[0];
+  const curY = selectedCell[1];
+  let newX = curX + deltaX;
+  let newY = curY + deltaY;
+  let invalidCode;
+  while (invalidCode = validateCell([newX, newY])) {
+    if (opt_nowraparound) {
+      newX -= deltaX;
+      newY -= deltaY;
+      break;
+    }
+    if (invalidCode === 2) {
+      if (deltaX === 1) {
+        newX = -1;
+      } else if (deltaX === -1) {
+        newX = dims[0];
+      } else if (deltaY === 1) {
+        newY = -1;
+      } else if (deltaY === -1) {
+        newY = dims[1];
+      }
+    }
+    newX += deltaX;
+    newY += deltaY;
+  }
+  updateSelectedCell([newX, newY], true);
 };
 
 // END HELPERS
