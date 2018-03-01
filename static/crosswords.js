@@ -13,7 +13,8 @@ const makeSquare = (x,y) => {
   square.append(letterHolder);
   const dummyInput = $("<input>");
   dummyInput.addClass("dummy-input");
-  dummyInput.keyup(handleKeypress(dims));
+  dummyInput.change(handleInputChange(dims));
+  dummyInput.keydown(handleKeypress(dims));
   square.append(dummyInput);
   if (!cellInfo[x]) {
     cellInfo[x] = {};
@@ -369,6 +370,21 @@ const renderGameId = (gameId) => {
 
 const handleCellClick = (event) => {
   selectCell($(event.currentTarget));
+};
+
+const handleInputChange = (dims) => {
+  const handler = handleKeypress(dims);
+  return (event) => {
+    const val = $(event.currentTarget).val();
+    if (val.length > 1) {
+      $(event.currentTarget).val('');
+    } else if (val.length === 1) {
+      event.which = val.charCodeAt(0); 
+    } else {
+      event.which = 36;
+    }
+    handler(event);
+  }
 };
 
 const handleKeypress = (dims) => (event) => {
