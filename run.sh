@@ -1,2 +1,3 @@
-/home/crosswords/crossword_together/crosswords_env/bin/gunicorn --workers 3 --bind unix:crosswords.sock -m 007 wsgi:app &
-/home/crosswords/crossword_together/crosswords_env/bin/python3 puzzles.py python3 &
+export FLASK_APP=run_server.py
+python3 puzzles.py &
+flask run &

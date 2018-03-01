@@ -141,7 +141,6 @@ const setup = () => {
     }
     $('#setup-holder').hide();
     $('#game-holder').show();
-    globalUuid = data.uuid;
     const puzzleSpec = data.puzzleSpec;
     const updates = data.updates;
     const gameId = data.gameId;
@@ -200,7 +199,7 @@ const rotateSelected = () => {
   const cell = getCell(selectedCell);
   const newDir = selectedClue[0] === 'down' ? 'across' : 'down';
   updateSelectedClue([newDir, cell.clues[newDir]]);
-  socket.send(JSON.stringify({'uuid': globalUuid, 'type': 'cursorMoved', 
+  socket.send(JSON.stringify({'type': 'cursorMoved', 
                               'data': [selectedCell, newDir]}));
 };
 
@@ -219,7 +218,7 @@ const updateSelectedCell = (newSelected) => {
   selectedCell = newSelected;
   renderCell(selectedCell);
   updateSelectedClue([selectedClue[0], newCell.clues[selectedClue[0]]]);
-  socket.send(JSON.stringify({'uuid': globalUuid, 'type': 'cursorMoved', 
+  socket.send(JSON.stringify({'type': 'cursorMoved', 
                               'data': [newSelected, selectedClue[0]]}));
 };
 
@@ -280,8 +279,7 @@ const putCharInCell = (c, loc, opt_alreadyString) => {
 
 const putCharInSelected = (c, opt_alreadyString) => {
   const newLetter = putCharInCell(c, selectedCell, opt_alreadyString);
-  socket.send(JSON.stringify({'uuid': globalUuid, 
-                              'type': 'letterPlaced', 
+  socket.send(JSON.stringify({ 'type': 'letterPlaced', 
                               'data': [selectedCell, newLetter]}));
 };
 
@@ -487,7 +485,7 @@ const validateCell = (loc) => {
 
 let selectedCell = [-1,-1];
 let selectedClue = ['across',-1];
-let socket, globalUuid;
+let socket;
 const cellInfo = {};
 const clueInfo = {'across': {}, 'down': {}};
 $(document).ready(setup);
