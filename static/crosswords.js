@@ -13,6 +13,7 @@ const makeSquare = (x,y) => {
   square.append(letterHolder);
   const dummyInput = $("<input>");
   dummyInput.addClass("dummy-input");
+  dummyInput.keyup(handleKeypress(dims));
   square.append(dummyInput);
   if (!cellInfo[x]) {
     cellInfo[x] = {};
@@ -150,7 +151,6 @@ const setup = () => {
     dims = puzzleSpec.dims;
     renderGameId(gameId);
     makeBoard(dims);
-    $(document).keydown(handleKeypress(dims));
     const acrossClues = puzzleSpec['across'];
     const downClues = puzzleSpec['down'];
     const cellNumbers = puzzleSpec['nums'];
@@ -372,7 +372,7 @@ const handleCellClick = (event) => {
 };
 
 const handleKeypress = (dims) => (event) => {
-  const moveSelected = (deltaX, deltaY) => { 
+  const moveSelected = (deltaX, deltaY) => {
     const curX = selectedCell[0];
     const curY = selectedCell[1];
     let newX = curX + deltaX;
@@ -395,7 +395,6 @@ const handleKeypress = (dims) => (event) => {
     }
     updateSelectedCell([newX, newY]);
   };
-  
   if (event.which > 36 && event.which < 41) {
     let deltaX = 0;
     let deltaY = 0;
@@ -412,7 +411,7 @@ const handleKeypress = (dims) => (event) => {
     case 40:
       deltaX = 1;
       break;		
-    }    
+    }
     moveSelected(deltaX, deltaY);
   } else if (event.which > 64 && event.which < 91) {
     putCharInSelected(event.which);
