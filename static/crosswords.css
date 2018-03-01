@@ -4,6 +4,7 @@ body {
 
 #board {
   display: table;
+  min-width: 620px;
 }
 
 #board-holder {
@@ -77,6 +78,7 @@ body {
 
 .clues-holder {
   width: 300px;
+  min-width: 300px;
   vertical-align: top;
   text-align: center;
 }
