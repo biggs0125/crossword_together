@@ -10,6 +10,7 @@ import json
 import random
 import os
 import threading
+import time
 
 GAMES = {}
 IDS = []
@@ -73,13 +74,13 @@ def save_game(game, game_id):
         'cells': game['cells']
     }
     f = open("saved/" + str(game_id), "w")
-    f.write(json.dumps(to_save))
+    f.write(str(int(time.time())) + "\n" + json.dumps(to_save))
     f.close()
 
 def load_game(game_id):
     try:
         f = open("saved/" + str(game_id), "r")
-        saved_info = json.loads(f.read())
+        saved_info = json.loads(f.readlines()[1])
         f.close()
         GAMES[game_id] = {
             'boardName': saved_info['boardName'],
@@ -95,8 +96,7 @@ def load_game(game_id):
 def get_or_load_game(game_id):
     if game_id in GAMES:
         return read_puzzle(GAMES[game_id]['boardName'])
-    return load_game(game_id)
-    
+    return load_game(game_id)    
 
 @asyncio.coroutine
 def remove_player(game, uuid):
