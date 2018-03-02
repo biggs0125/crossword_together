@@ -199,6 +199,7 @@ const getClueNumForClue = (clueElement) => {
 // END GETTERS
 
 // BEGIN UPDATERS
+
 const rotateSelected = () => {
   const cell = getCell(selectedCell);
   const newDir = selectedClue[0] === 'down' ? 'across' : 'down';
@@ -207,12 +208,13 @@ const rotateSelected = () => {
                               'data': [selectedCell, newDir]}));
 };
 
-const updateSelectedCell = (newSelected, opt_norotate) => {
+const updateSelectedCell = (newSelected, opt_norotate) => {  
+  const oldCell = getCell(selectedCell);
   if (!opt_norotate && newSelected[0] === selectedCell[0] && newSelected[1] === selectedCell[1]) {
+    oldCell.elem.find(".dummy-input").focus();
     rotateSelected();
     return; 
   }
-  const oldCell = getCell(selectedCell);
   if (oldCell) {
     oldCell.selected = false;
     renderCell(selectedCell);
@@ -250,7 +252,11 @@ const updateSelectedClue = (newSelected) => {
 };
 
 const selectCell = (cellElement) => {
-  updateSelectedCell(getLocForCell(cellElement));
+  const loc = getLocForCell(cellElement);
+  if (validateCell(loc) !== 0) {
+    return;
+  }
+  updateSelectedCell(loc);
 };
 
 const selectClue = (clueElement) => {
