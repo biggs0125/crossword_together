@@ -6,25 +6,19 @@
 import puz
 import asyncio
 import websockets
-import json
-import random
-import os
 import threading
+import random
 import time
+import json
+from datetime import datetime
 
-GAMES = {}
-IDS = []
-COLORS = ['purple', 'red', 'green', 'orange']
-
-def get_random_id():
-    new_id = random.randint(0, 10000000)
-    if new_id in IDS:
-        return get_random_id()
-    else:
-        return new_id
+from game_support import save_game, get_or_load_game, create_game, game_empty
 
 def read_puzzle(boardName):
-    p = puz.read("puzzles/" + boardName + ".puz")
+    try:
+        p = puz.read("puzzles/" + boardName + ".puz")
+    except FileNotFoundError:
+        return None
     numbering = p.clue_numbering()
     cells = dict()
 
@@ -54,50 +48,6 @@ def read_puzzle(boardName):
             "filled": filled,
             "dims": [p.height, p.width]}
 
-def create_game(board_name):
-    try:
-        puzzle_spec = read_puzzle(board_name)
-        game_id = get_random_id()
-        GAMES[game_id] = {
-            'boardName': board_name,
-            'players': {}, 
-            'cells': {},
-            'colors': [color for color in COLORS]
-        }
-        return game_id, puzzle_spec
-    except FileNotFoundError:
-        return None, None
-
-def save_game(game, game_id):
-    to_save = {
-        'boardName': game['boardName'],
-        'cells': game['cells']
-    }
-    f = open("saved/" + str(game_id), "w")
-    f.write(str(int(time.time())) + "\n" + json.dumps(to_save))
-    f.close()
-
-def load_game(game_id):
-    try:
-        f = open("saved/" + str(game_id), "r")
-        saved_info = json.loads(f.readlines()[1])
-        f.close()
-        GAMES[game_id] = {
-            'boardName': saved_info['boardName'],
-            'players': {},
-            'cells': saved_info['cells'],
-            'colors': [color for color in COLORS]
-        }
-        puzzle_spec = read_puzzle(saved_info['boardName'])
-        return puzzle_spec
-    except FileNotFoundError:
-        return None
-
-def get_or_load_game(game_id):
-    if game_id in GAMES:
-        return read_puzzle(GAMES[game_id]['boardName'])
-    return load_game(game_id)    
-
 @asyncio.coroutine
 def remove_player(game, uuid):
     cursor = game['players'][uuid]['cursor']
@@ -107,7 +57,6 @@ def remove_player(game, uuid):
         yield from send_updates_for_cells([cursor], game, uuid)
     game['colors'].append(game['players'][uuid]['color'])
     del game['players'][uuid]
-    IDS.remove(uuid)
     clean_cells([cursor], game)
 
 def add_player(game, uuid, websocket):
@@ -117,7 +66,6 @@ def add_player(game, uuid, websocket):
     game['colors'].remove(color)
     game['players'][uuid] = {'websocket': websocket, 'cursor': None, 'orientation': None, 
                              'color': color}
-    IDS.append(uuid)
     return True
 
 @asyncio.coroutine
@@ -125,7 +73,7 @@ def handle_connection_closed(game, game_id, uuid):
     yield from remove_player(game, uuid)
     if len(game['players']) == 0:
         save_game(game, game_id)
-        del GAMES[game_id]
+        game_empty(game_id)
 
 @asyncio.coroutine
 def run_game(websocket, path):
@@ -134,34 +82,26 @@ def run_game(websocket, path):
         init_info = yield from websocket.recv()
         init_info = json.loads(init_info)
         if 'boardName' in init_info:
-            board_name = init_info['boardName']
-            game_id, puzzle_spec = create_game(board_name)
-            if game_id is None:
-                yield from send_error(websocket, path, "board-name", 
-                                      "The provided board name does not exist.")
-                continue
+            board_name = datetime.strptime(init_info['boardName'], "%Y-%m-%d").strftime("%b%d%y")
+            game_id = create_game(board_name)
         elif 'gameId' in init_info:
             try:
                 game_id = int(init_info['gameId'])
             except ValueError:
                 yield from send_error(websocket, path, "game-id",
                                       "The provided game ID is not a valid format.")
-            puzzle_spec = get_or_load_game(game_id)
-            if puzzle_spec is None:
-                yield from send_error(websocket, path, "game-id", 
-                                      "The provided game ID does not exist.")
-                continue
+        game = get_or_load_game(game_id)
+        puzzle_spec = read_puzzle(game['boardName'])
+        if puzzle_spec is None:
+            yield from send_error(websocket, path, "board-name", 
+                          "We do not have a board for the date you have chosen.")
+            continue
+        uuid = int(str(time.time()).replace(".","")[2:])
+        if add_player(game, uuid, websocket):
+            break
+        yield from send_error(websocket, path, "game-id",
+                              "The game you are trying to join is full.")
             
-        game = GAMES[game_id]
-        if 'uuid' in init_info and init_info['uuid'] in game['players']:
-            uuid = init_info['uuid']
-        else:
-            uuid = get_random_id()
-            if add_player(game, uuid, websocket):
-                break
-            else:
-                yield from send_error(websocket, path, "game-id", 
-                                      "The game you are trying to join is full.")
     yield from send_board(websocket, path, game, game_id, puzzle_spec, uuid)
     del puzzle_spec
     try:
@@ -234,8 +174,7 @@ def clean_cells(cursors, game):
             cell = cells[cursor]
             if len(cell['selected']['down']) == 0 and len(cell['selected']['across']) == 0 \
                and ((not 'letter' in cell) or cell['letter'] == ' '):
-                del cells[cursor]
-    
+                del cells[cursor]    
 
 def get_updates_from_cells(game, uuid):
     return create_updates_for_cells(game['cells'].keys(), game, uuid)
@@ -261,9 +200,6 @@ def run():
     start_server = websockets.serve(run_game, '0.0.0.0', 5678)
     asyncio.get_event_loop().run_until_complete(start_server)
     asyncio.get_event_loop().run_forever()
-    #t = threading.Thread(target=asyncio.get_event_loop().run_forever)
-    #t.start()
 
 if __name__ == "__main__":
     run()
-    

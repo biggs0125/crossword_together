@@ -95,14 +95,6 @@ body {
   text-decoration: line-through;
 }
 
-.error {
-  color: red;
-}
-
-.join-game-row {
-  margin: 20px 0px;
-}
-
 .dummy-input {
   width: 0;
   height: 0;

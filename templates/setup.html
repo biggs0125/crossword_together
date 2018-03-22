@@ -1,0 +1,23 @@
+<html>
+  <head>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script src="{{ js_url }}"></script>
+    <link rel="stylesheet" type="text/css" href="{{ css_url }}">
+  </head>
+  <body>
+    <div id="setup-holder">
+      <div class="join-game-row">
+        <label>Start a new game by entering a board name:</label>
+        <input type="date" id="board-name">
+        <input type="submit" id="submit-board-name" value="Start Game">
+        <span id="board-name-error" class="error"></span>
+      </div>
+      <div class="join-game-row">
+        <label>Join a running game by entering a game ID:</label>
+        <input type="text" id="game-id">
+        <input type="submit" id="submit-game-id" value="Join Game">
+        <span id="game-id-error" class="error"></span>
+      </div>
+    </div>
+  </body>
+</html>
