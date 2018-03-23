@@ -1,8 +1,10 @@
 from flask import Flask, render_template, url_for, request, redirect, jsonify
+import flask_cache_bust as cache_bust
 from game_support import create_game, game_id_str_valid
 from datetime import datetime
 
 app = Flask(__name__)
+cache_bust.init_cache_busting(app)
 
 def make_success_response(data):
     return jsonify({"status": "SUCCESS", "data": data})
