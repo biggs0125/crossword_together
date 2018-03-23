@@ -17,7 +17,8 @@ def load_game(game_id):
 def save_game(game_id, game):
   conn = open_connection()
   c = conn.cursor()
-  c.execute("UPDATE games SET game = ? WHERE game_id = ?", (game, game_id))
+  now = int(time.time())
+  c.execute("UPDATE games SET game = ?, last_saved = ? WHERE game_id = ?", (game, now, game_id))
   conn.commit()
   conn.close()
 
@@ -25,14 +26,15 @@ def get_all_game_ids():
   conn = open_connection()
   c = conn.cursor()
   c.execute("SELECT game_id FROM games")
-  game_ids = c.fetchall()
+  game_ids = [row[0] for row in c.fetchall()]
   conn.close()
   return game_ids
 
 def create_game(game_id, game):
   conn = open_connection()
   c = conn.cursor()
-  c.execute("INSERT INTO games VALUES (?, ?, ?)", (game_id, game, int(time.time())))
+  now = int(time.time())
+  c.execute("INSERT INTO games VALUES (?, ?, ?, ?)", (game_id, game, now, now))
   conn.commit()
   conn.close()
 
@@ -40,7 +42,7 @@ def create_table():
   conn = open_connection()
   c = conn.cursor()
   c.execute('DROP TABLE games')
-  c.execute('CREATE TABLE games (game_id integer, game blob, created_at bigint, PRIMARY KEY(game_id))')
+  c.execute('CREATE TABLE games (game_id integer, game blob, created_at bigint, last_saved bigint, PRIMARY KEY(game_id))')
   conn.commit()
   conn.close()
   

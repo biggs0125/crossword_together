@@ -1,1 +1,1 @@
-python3 puzzles.py &
+python3 game_runner.py &

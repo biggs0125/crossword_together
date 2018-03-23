@@ -112,30 +112,6 @@ const associateCells = () => {
 };
 
 const setup = () => {
-  $('#submit-board-name').click(() => {
-    const boardName = $('#board-name').val();
-    const sendBoardName = () => {
-      socket.send(JSON.stringify({'boardName': boardName}));
-    };
-    if (socket.readyState === 1) {
-      sendBoardName();
-    } else {
-      socket.onopen = sendBoardName;
-    }
-  });
-  $('#submit-game-id').click(() => {
-    const gameId = $('#game-id').val();
-    const sendGameId = () => {
-      socket.send(JSON.stringify({'gameId': gameId}));
-    };
-    if (socket.readyState === 1) {
-      sendGameId();
-    } else {
-      socket.onopen = sendGameId;
-    }
-  });
-  $('#setup-holder').show();
-  $('#game-holder').hide();
   socket = new WebSocket('ws://' + window.location.hostname + ':5678');
   socket.onmessage = (event) => {
     const data = JSON.parse(event.data);
@@ -143,13 +119,10 @@ const setup = () => {
       $(`#${data.error.field}-error`).text(data.error.message);
       return;
     }
-    $('#setup-holder').hide();
-    $('#game-holder').show();
     const puzzleSpec = data.puzzleSpec;
     const updates = data.updates;
     const gameId = data.gameId;
     dims = puzzleSpec.dims;
-    renderGameId(gameId);
     makeBoard(dims);
     const acrossClues = puzzleSpec['across'];
     const downClues = puzzleSpec['down'];
@@ -164,6 +137,11 @@ const setup = () => {
     socket.onmessage = (event) => {
       handleUpdates(JSON.parse(event.data));
     };
+  };
+  socket.onopen = () => {
+    const pathSplit = window.location.pathname.split('/');
+    const gameId = pathSplit[pathSplit.length - 1];
+    socket.send(JSON.stringify({'gameId': gameId}));
   };
 };
 
@@ -365,10 +343,6 @@ const renderAllCells = () => {
     }
   }
 }
-
-const renderGameId = (gameId) => {
-  $('#game-id-holder').text(gameId);
-};
 
 // END RENDERERS
 

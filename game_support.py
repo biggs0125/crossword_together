@@ -1,7 +1,7 @@
 import json
 import db
 import random
-
+from puzzles import does_board_exist
 GAMES = {}
 COLORS = ['purple', 'red', 'green', 'orange']
 
@@ -14,6 +14,8 @@ def get_random_id():
 
 # GAME CREATION, SAVING, & LOADING
 def create_game(board_name):
+    if not does_board_exist(board_name):
+        return None
     game_id = get_random_id()
     game = {
         'boardName': board_name,
@@ -58,3 +60,11 @@ def get_or_load_game(game_id):
 
 def game_empty(game_id):
     del GAMES[game_id]
+
+def game_id_str_valid(game_id_str):
+    try:
+        game_id = int(game_id_str)
+        return game_id in db.get_all_game_ids()
+    except ValueError:
+        return False
+    
