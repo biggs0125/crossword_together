@@ -6,8 +6,8 @@ const setupHandlers = () => {
       'data': {"boardName": boardName},
       'success': (result) => {
         if (result['status'] === "SUCCESS") {
-          const gameId = result['data']['gameId'];
-          window.location.path = "/crossword/" + gameId;
+          const gameId = result['data']['game_id'];
+          window.location =  "crossword/" + gameId;
         } else {
           $("#board-name-error").text(result['errors'][0]);
         }
@@ -21,7 +21,7 @@ const setupHandlers = () => {
       'data': {"gameId": gameId},
       'success': (result) => {
         if (result['status'] === "SUCCESS") {
-          window.location.path = "/crossword/" + gameId;
+          window.location = "crossword/" + gameId;
         } else {
           $("#game-id-error").text(result['errors'][0]);
         }
