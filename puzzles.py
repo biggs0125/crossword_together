@@ -32,17 +32,11 @@ def read_puzzle(board_name):
         cell = clue["cell"]
         cells[clue["num"]] = [cell // p.width, cell % p.width]
 
-    filled = []
-    for i in range (p.width * p.height):
-        c = p.fill[i]
-        if (c == "."):
-            filled.append([i // p.width, i % p.width])
-
     cells_array = [[cells[key], key] for key in cells.keys()]
 
     return {"across": across,
             "down": down,
             "nums": cells_array,
-            "filled": filled,
+            "solutions": p.solution,
             "dims": [p.height, p.width]}
 

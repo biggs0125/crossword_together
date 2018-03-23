@@ -19,9 +19,11 @@ const makeSquare = (x,y) => {
     cellInfo[x] = {};
   }
   cellInfo[x][y] = {
+    loc: [x,y],
     number: 0, 
     filled: false, 
     letter: ' ', 
+    solution: ' ',
     clues: {'down': 0, 'across': 0},
     elem: square,
     highlighted: false,
@@ -65,12 +67,6 @@ const makeClue = (cluesElem, dir) => (c) => {
   $(clue).click(handleClueClick(clue));
 };
 
-const fillCells = (locs) => {
-  locs.forEach((loc) => {
-    getCell(loc).filled = true;
-  });
-};
-
 const addClues = (across, down) => {
   const acrossClues = $("#across-clues");
   const downClues = $("#down-clues");
@@ -85,12 +81,17 @@ const addNumbers = (numbers) => {
   });
 };
 
-const associateCells = () => {
+const setupCells = (sols, dims) => {
   let curAcross;
   let downDict = {};
   for (let i = 0; i < dims[0]; i++) {
     for (let j = 0; j < dims[1]; j++) {
       const cell = getCell([i,j]);
+      const solution = sols[i * dims[0] + j];
+      if (solution === '.') {
+        cell.filled = true;
+      }
+      cell.solution = solution;
       if (cell.filled) {
         downDict[j] = null;
         curAcross = null;
@@ -111,6 +112,11 @@ const associateCells = () => {
   }
 };
 
+const setupExtraButtons = () => {
+  $("#solve-clue-button").click(solveSelectedClue);
+  $("#solve-cell-button").click(solveSelectedCell);
+}
+
 const setup = () => {
   socket = new WebSocket('ws://' + window.location.hostname + ':5678');
   socket.onmessage = (event) => {
@@ -129,11 +135,12 @@ const setup = () => {
     const cellNumbers = puzzleSpec['nums'];
     addClues(acrossClues, downClues);
     addNumbers(puzzleSpec['nums']);
-    fillCells(puzzleSpec['filled']);
-    associateCells();
+    setupCells(puzzleSpec['solutions'], dims);
+    setupExtraButtons();
     $(document).keydown(handleKeypress(dims));
     handleUpdates(updates);
     renderAllCells();
+    $("#game-holder").show();
     socket.onmessage = (event) => {
       handleUpdates(JSON.parse(event.data));
     };
@@ -244,7 +251,7 @@ const selectClue = (clueElement) => {
   updateSelectedCell(clue.cells[0]);
 };
 
-const putCharInCell = (c, loc, opt_alreadyString) => {
+const putCharInCell = (c, loc, opt_alreadyString, opt_sendUpdate) => {
   const cell = getCell(loc); 
   const oldLetter = cell.letter;
   const newLetter = opt_alreadyString ? c : String.fromCharCode(c);
@@ -263,14 +270,32 @@ const putCharInCell = (c, loc, opt_alreadyString) => {
   renderCell(loc);
   renderClue(['down', cell.clues['down']]);
   renderClue(['across', cell.clues['across']]);
+  if (opt_sendUpdate) {
+    socket.send(JSON.stringify({'type': 'letterPlaced', 
+                                'data': [loc, newLetter]}));
+  }
   return newLetter;
 };
 
 const putCharInSelected = (c, opt_alreadyString) => {
-  const newLetter = putCharInCell(c, selectedCell, opt_alreadyString);
-  socket.send(JSON.stringify({ 'type': 'letterPlaced', 
-                              'data': [selectedCell, newLetter]}));
+  const newLetter = putCharInCell(c, selectedCell, opt_alreadyString, true);
 };
+
+const solveCell = (loc) => {
+  const cell = getCell(loc);
+  putCharInCell(cell.solution, cell.loc, true, true);
+};
+
+const solveSelectedCell = () => {
+  solveCell(selectedCell);
+}
+
+const solveSelectedClue = () => {
+  const clue = getClue(selectedClue);
+  clue.cells.forEach((loc) => {
+    solveCell(loc);
+  });
+}
 
 // END UPDATERS
 

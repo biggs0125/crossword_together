@@ -2,6 +2,15 @@ body {
   font-family: arial;
 }
 
+#game-holder {
+  display: none;
+}
+
+.controls {
+  position: relative;
+  bottom: 50px;
+}
+
 #board {
   display: table;
   min-width: 620px;
