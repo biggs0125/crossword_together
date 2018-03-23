@@ -44,4 +44,4 @@ def crossword(game_id):
                            js_url=url_for('static', filename='crosswords.js'))
 
 if __name__ == "__main__":
-    app.run(host='0.0.0.0', threaded = True)
+    app.run(host='0.0.0.0')
