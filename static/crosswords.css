@@ -72,6 +72,10 @@ body {
   background-color: lightgoldenrodyellow;
 }
 
+#board .board-cell.wrong-solution {
+    background-color: lightcoral;
+}
+
 .num-holder {
   width: 10%;
   height: 10%;

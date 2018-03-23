@@ -115,6 +115,7 @@ const setupCells = (sols, dims) => {
 const setupExtraButtons = () => {
   $("#solve-clue-button").click(solveSelectedClue);
   $("#solve-cell-button").click(solveSelectedCell);
+  $("#check-board-button").click(checkBoard);
 }
 
 const setup = () => {
@@ -267,6 +268,7 @@ const putCharInCell = (c, loc, opt_alreadyString, opt_sendUpdate) => {
   downClue.solved += delta;
   const acrossClue = getClue(['across', cell.clues['across']]);
   acrossClue.solved += delta;
+  cell.wrong = false;
   renderCell(loc);
   renderClue(['down', cell.clues['down']]);
   renderClue(['across', cell.clues['across']]);
@@ -338,6 +340,11 @@ const renderCell = (loc) => {
     info.elem.removeClass('selected-cell-other-purple');
     info.elem.removeClass('selected-cell-other-green');
     info.elem.removeClass('selected-cell-other-orange');
+  }
+  if (info.wrong && info.letter != ' ') {
+    info.elem.addClass('wrong-solution');
+  } else {
+    info.elem.removeClass('wrong-solution');
   }
 };
 
@@ -514,6 +521,32 @@ const moveSelected = (deltaX, deltaY, opt_nowraparound) => {
     newY += deltaY;
   }
   updateSelectedCell([newX, newY], true);
+};
+
+const checkCell = (loc) => {
+  const cell = getCell(loc);
+  const isWrong = cell.letter !== cell.solution && !cell.filled;
+  if (isWrong) {
+    cell.wrong = true;
+    renderCell(loc);
+  }
+  return isWrong;
+};
+
+const checkSelectedCell = () => {
+  checkCell(selectedCell);
+};
+
+const checkBoard = () => {
+  let foundWrong = false;
+  for (let i=0; i < dims[0]; i++) {
+    for (let j=0; j < dims[1]; j++) {
+      foundWrong = checkCell([i,j]) || foundWrong;
+    }
+  }
+  if (!foundWrong) {
+    alert("You succesfully completed the puzzle!");
+  }
 };
 
 // END HELPERS
