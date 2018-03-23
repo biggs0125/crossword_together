@@ -41,7 +41,10 @@ def create_game(game_id, game):
 def create_table():
   conn = open_connection()
   c = conn.cursor()
-  c.execute('DROP TABLE games')
+  try:
+    c.execute('DROP TABLE games')
+  except Exception:
+    pass
   c.execute('CREATE TABLE games (game_id integer, game blob, created_at bigint, last_saved bigint, PRIMARY KEY(game_id))')
   conn.commit()
   conn.close()
