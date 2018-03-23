@@ -116,6 +116,7 @@ const setupExtraButtons = () => {
   $("#solve-clue-button").click(solveSelectedClue);
   $("#solve-cell-button").click(solveSelectedCell);
   $("#check-board-button").click(checkBoard);
+  $("#check-cell-button").click(checkSelectedCell);
 }
 
 const setup = () => {
@@ -289,10 +290,15 @@ const solveCell = (loc) => {
 };
 
 const solveSelectedCell = () => {
-  solveCell(selectedCell);
+  if (!validateCell(selectedCell)) {
+    solveCell(selectedCell);
+  }
 }
 
 const solveSelectedClue = () => {
+  if (selectedClue[1] < 0) {
+    return;
+  }
   const clue = getClue(selectedClue);
   clue.cells.forEach((loc) => {
     solveCell(loc);
@@ -485,7 +491,7 @@ const handleUpdates = (updates) => {
 
 const validateCell = (loc) => {
   const cell = getCell(loc);
-  if (cell === null) {
+  if (cell === null || cell === [-1, -1]) {
     return 2;
   }
   if (cell.filled) {
@@ -534,7 +540,9 @@ const checkCell = (loc) => {
 };
 
 const checkSelectedCell = () => {
-  checkCell(selectedCell);
+  if (!validateCell(selectedCell)) {
+    checkCell(selectedCell);
+  }
 };
 
 const checkBoard = () => {
