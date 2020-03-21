@@ -20,16 +20,16 @@ const makeSquare = (x,y) => {
   }
   cellInfo[x][y] = {
     loc: [x,y],
-    number: 0, 
-    filled: false, 
-    letter: ' ', 
+    number: 0,
+    filled: false,
+    letter: ' ',
     solution: ' ',
     clues: {'down': 0, 'across': 0},
     elem: square,
     highlighted: false,
     selected: false,
-    otherSelected: {'down': [], 'across': []}, 
-    letterElem: letterHolder, 
+    otherSelected: {'down': [], 'across': []},
+    letterElem: letterHolder,
     numberElem: numHolder
   };
   return square;
@@ -57,7 +57,7 @@ const makeClue = (cluesElem, dir) => (c) => {
   $(clue).attr("dir", dir);
   cluesElem.append(clue);
   clueInfo[dir][c[0]] = {
-    text: c[1], 
+    text: c[1],
     cells: [],
     solved: 0,
     selected: false,
@@ -99,7 +99,7 @@ const setupCells = (sols, dims) => {
       }
       if (!curAcross) {
         curAcross = cell.number;
-      } 
+      }
       cell.clues['across'] = curAcross;
       clueInfo['across'][curAcross].cells.push([i,j]);
       if (!downDict[j]) {
@@ -117,7 +117,11 @@ const setupExtraButtons = () => {
   $("#solve-cell-button").click(solveSelectedCell);
   $("#check-board-button").click(checkBoard);
   $("#check-cell-button").click(checkSelectedCell);
-}
+};
+
+const setupTitle = (title) => {
+  $("#title-holder").text(title);
+};
 
 const setup = () => {
   socket = new WebSocket('ws://' + window.location.hostname + ':5678');
@@ -137,6 +141,7 @@ const setup = () => {
     const cellNumbers = puzzleSpec['nums'];
     addClues(acrossClues, downClues);
     addNumbers(puzzleSpec['nums']);
+    setupTitle(puzzleSpec['title']);
     setupCells(puzzleSpec['solutions'], dims);
     setupExtraButtons();
     $(document).keydown(handleKeypress(dims));

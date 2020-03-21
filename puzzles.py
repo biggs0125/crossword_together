@@ -22,6 +22,7 @@ def read_puzzle(board_name):
         p = puz.read(filename_from_board(board_name))
     except FileNotFoundError:
         return None
+    title = p.title
     numbering = p.clue_numbering()
     cells = dict()
 
@@ -39,7 +40,8 @@ def read_puzzle(board_name):
 
     cells_array = [[cells[key], key] for key in cells.keys()]
 
-    return {"across": across,
+    return {"title": title,
+            "across": across,
             "down": down,
             "nums": cells_array,
             "solutions": p.solution,

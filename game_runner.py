@@ -48,7 +48,7 @@ def run_game(websocket, path):
         game = get_or_load_game(game_id)
         puzzle_spec = read_puzzle(game['boardName'])
         if puzzle_spec is None:
-            yield from send_error(websocket, path, "board-name", 
+            yield from send_error(websocket, path, "board-name",
                           "We do not have a board for the date you have chosen.")
             continue
         uuid = int(str(time.time()).replace(".","")[2:])
@@ -56,7 +56,7 @@ def run_game(websocket, path):
             break
         yield from send_error(websocket, path, "game-id",
                               "The game you are trying to join is full.")
-            
+
     yield from send_board(websocket, path, game, game_id, puzzle_spec, uuid)
     del puzzle_spec
     try:
