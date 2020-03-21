@@ -21,7 +21,8 @@ def setup():
 @app.route('/create-game', methods=['POST'])
 def create_game_endpoint():
     boardname = request.form.get("boardName", None)
-    boardname = datetime.strptime(boardname, "%Y-%m-%d").strftime("%b%d%y")
+    if not boardname is None:
+      boardname = datetime.strptime(boardname, "%Y-%m-%d").strftime("%b%d%y")
     game_id = create_game(boardname)
     if game_id is None:
         return make_error_response(["No board could be found for the date you selected."])
