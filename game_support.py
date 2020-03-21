@@ -14,7 +14,7 @@ def get_random_id():
 
 # GAME CREATION, SAVING, & LOADING
 def create_game(board_name):
-    if board_name is None:
+    if not board_name:
         board_name = get_random_board()
     if not does_board_exist(board_name):
         return None
