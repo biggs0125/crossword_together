@@ -13,7 +13,7 @@ const setupHandlers = () => {
         }
       }
     });
-  });                             
+  });
   $('#submit-game-id').click(() => {
     const gameId = $('#game-id').val();
     $.post({

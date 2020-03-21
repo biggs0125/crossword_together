@@ -22,7 +22,7 @@ def add_player(game, uuid, websocket):
         return False
     color = random.choice(game['colors'])
     game['colors'].remove(color)
-    game['players'][uuid] = {'websocket': websocket, 'cursor': None, 'orientation': None, 
+    game['players'][uuid] = {'websocket': websocket, 'cursor': None, 'orientation': None,
                              'color': color}
     return True
 
@@ -100,24 +100,24 @@ def send_updates_for_cells(cursors, game, uuid):
     for u in game['players']:
         if u != uuid:
             updates = create_updates_for_cells(cursors, game, u)
-            yield from game['players'][u]['websocket'].send(json.dumps(updates))    
+            yield from game['players'][u]['websocket'].send(json.dumps(updates))
 
 def create_updates_for_cells(cursors, game, uuid):
     updates = []
     for cursor in cursors:
         cell = game['cells'][cursor]
         otherSelectedDown = filter(lambda x: x != uuid, cell['selected']['down'])
-        othersDown = map(lambda x: {'uuid': x, 'color': game['players'][x]['color']}, 
+        othersDown = map(lambda x: {'uuid': x, 'color': game['players'][x]['color']},
                          otherSelectedDown)
         otherSelectedAcross = filter(lambda x: x != uuid, cell['selected']['across'])
-        othersAcross = map(lambda x: {'uuid': x, 'color': game['players'][x]['color']}, 
+        othersAcross = map(lambda x: {'uuid': x, 'color': game['players'][x]['color']},
                            otherSelectedAcross)
         state = {}
         state['otherSelected'] = {'down': list(othersDown), 'across': list(othersAcross)}
         if 'letter' in cell:
             state['letter'] = cell['letter']
         updates.append({
-            'loc': cursor_to_loc(cursor), 
+            'loc': cursor_to_loc(cursor),
             'state': state
         })
     return updates
@@ -129,7 +129,7 @@ def clean_cells(cursors, game):
             cell = cells[cursor]
             if len(cell['selected']['down']) == 0 and len(cell['selected']['across']) == 0 \
                and ((not 'letter' in cell) or cell['letter'] == ' '):
-                del cells[cursor]    
+                del cells[cursor]
 
 def get_updates_from_cells(game, uuid):
     return create_updates_for_cells(game['cells'].keys(), game, uuid)
@@ -139,10 +139,10 @@ def cursor_to_loc(cursor):
 
 def loc_to_cursor(loc):
     return ','.join(map(lambda x: str(x), loc))
-		
+
 @asyncio.coroutine
 def send_board(websocket, path, game, game_id, puzzle_spec, uuid):
-    message = {'puzzleSpec': puzzle_spec, 
+    message = {'puzzleSpec': puzzle_spec,
                'updates': get_updates_from_cells(game, uuid),
                'gameId': game_id}
     yield from websocket.send(json.dumps(message))
@@ -150,7 +150,7 @@ def send_board(websocket, path, game, game_id, puzzle_spec, uuid):
 @asyncio.coroutine
 def send_error(websocket, path, error_field, error_msg):
     yield from websocket.send(json.dumps({"error": {"message": error_msg, "field": error_field}}))
-    
+
 def run():
     start_server = websockets.serve(run_game, '0.0.0.0', 5678)
     asyncio.get_event_loop().run_until_complete(start_server)

@@ -4,13 +4,18 @@
 # filled:     [[x, y], ...]
 
 import puz
-import os.path
+import os
+import random
 
 def filename_from_board(board_name):
     return "puzzles/" + board_name + ".puz"
 
 def does_board_exist(board_name):
     return os.path.isfile(filename_from_board(board_name))
+
+def get_random_board():
+    filename = random.choice(os.listdir("puzzles"))
+    return filename.replace(".puz", "")
 
 def read_puzzle(board_name):
     try:
@@ -39,4 +44,3 @@ def read_puzzle(board_name):
             "nums": cells_array,
             "solutions": p.solution,
             "dims": [p.height, p.width]}
-
